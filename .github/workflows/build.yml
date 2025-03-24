@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
-    # manual trigger
+    - manual trigger
   schedule:
-    - cron: '0 6,14,22 * * *'
+    # cron: '0 6,14,22 * * *'
 
 env:
   MIMALLOC_ALLOW_LARGE_OS_PAGES: 1
@@ -26,12 +26,6 @@ jobs:
     strategy: 
       matrix:
         include:
-          - arch: GENERIC_CPU4
-            image-name: bzImage-x64v4
-          - arch: GENERIC_MZEN3
-            image-name: bzImage-zen3
-          - arch: GENERIC_MZEN4
-            image-name: bzImage-zen4
           - arch: GENERIC_MZEN5
             image-name: bzImage-zen5
     steps:
@@ -75,7 +69,7 @@ jobs:
               "${{ github.event_name }}" = 'workflow_dispatch' ]]; then
           echo "REBUILD_FLAG=1" | tee -a $GITHUB_ENV
         else 
-          echo "REBUILD_FLAG=" | tee -a $GITHUB_ENV
+          echo "REBUILD_FLAG=1" | tee -a $GITHUB_ENV
         fi
 
     - name: Initialize ccache
@@ -92,6 +86,16 @@ jobs:
           compression=false
           sloppiness=locale,time_macros,pch_defines
 
+    - name: Configure swap space
+      run: |
+        # Create a 4GB swap file
+        sudo fallocate -l 4G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        # Verify it's working
+        sudo swapon --show
+    
     - name: Build kernel
       if: ${{ env.REBUILD_FLAG }}
       run: |
@@ -157,18 +161,9 @@ jobs:
           Latest XanMod MAIN kernel for WSL2, built with ${{ needs.build.outputs.clang_version }}.
           Provide builds on different archs with matrix build utility of GitHub Action.
 
-          * `bzImage-x64v{2,3,4}` for generic-x86_64-v{2,3,4}
-          * `bzImage-skylake` for Intel Skylake
-          * `bzImage-zen` for AMD Ryzen 1xxx/2xxx series CPUs
-          * `bzImage-zen2` for AMD Ryzen 3xxx/4xxx series CPUs
-          * `bzImage-zen3` for AMD Ryzen 5xxx/6xxx series CPUs
-          * `bzImage-zen4` for AMD Ryzen 7xxx/8xxx series CPUs
           * `bzImage-zen5` for AMD Ryzen 9xxx/AI 300 series CPUs
 
           To check supported x86_64 level on your machine, see [how to check supported x86_64 level of the hardware](https://unix.stackexchange.com/questions/631217/how-do-i-check-if-my-cpu-supports-x86-64-v2?msclkid=42ca61e9aa7111ecbcab7bb1a4204357).
-          And if you happen to use intel skylake chips (just like me), you can choose `bzImage-skylake` for best tuning.
-
-          **NOTE for Win11**: the minimum requirement of Win11 ensures generic-x86_64-v3 support, so feel free to use `bzImage-x64v3`.
           
         files: |
           release_images/*
