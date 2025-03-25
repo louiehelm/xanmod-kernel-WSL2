@@ -5,9 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
-    - manual trigger
-  schedule:
+  workflow_dispatch: {}  # Empty map - this allows manual triggering
+  #schedule:
     # cron: '0 6,14,22 * * *'
 
 env:
@@ -86,16 +85,6 @@ jobs:
           compression=false
           sloppiness=locale,time_macros,pch_defines
 
-    - name: Configure swap space
-      run: |
-        # Create a 4GB swap file
-        sudo fallocate -l 4G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        # Verify it's working
-        sudo swapon --show
-    
     - name: Build kernel
       if: ${{ env.REBUILD_FLAG }}
       run: |
