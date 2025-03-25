@@ -60,7 +60,7 @@ LOGICAL_CORES=${LOGICAL_CORES:-$(nproc)}
 #
 if [ "$BRANCH" = "MAIN" ]; then
 	echo -e "Using $LOGICAL_CORES jobs for MAIN build..."
-	make CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LLVM=1 LLVM_IAS=1 -j1 # reduce threads to reduce mem usage
+	make CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LLVM=1 LLVM_IAS=1 -j$(nproc) # regular threads is fine
 elif [ "$BRANCH" = "LTS" ]; then
 	echo -e "Using $LOGICAL_CORES jobs for LTS build..."
 	make LLVM=1 LLVM_IAS=1 -j$LOGICAL_CORES
